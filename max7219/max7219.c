@@ -2,18 +2,20 @@
 #include "../spi/spi.h"
 #include "max7219.h"
 
+// Функция инициализации драйвера
 void MAX_Init() {
+    // инициализируем МК ведущим
     SPI_MasterInit();
 
-    // 0 - decode mode
-    // 1 - intensity
-    // 2 - scan limit
-    // 3 - shutdown mode
-    // 4 - display test mode
+    // 0 - режим декодирования
+    // 1 - яркость
+    // 2 - предел сканирования
+    // 3 - режим работы драйвера
+    // 4 - режим тестирования
     unsigned char initRegister[5] = {0x09, 0x0A, 0x0B, 0x0C, 0x0F};
     unsigned char initRegisterValue[5] = {DECODE_MODE, INTENSITY, SCAN_LIMIT, SHUTDOWN, DISPLAY_TEST};
 
-    // configure driver
+    // настраиваем драйвер
     for (int i = 0; i < 5; i++) {
         MAX_WriteDigit(initRegister[i], initRegisterValue[i]);
     }
@@ -22,7 +24,9 @@ void MAX_Init() {
 }
 
 void MAX_WriteDigit(unsigned char address, unsigned char data) {
+    // записывает первый байт (address), содержащий адрес регистра знакоместа (Digit)
     SPI_MasterTransmit(address, 0);
+    // записывает второй байт - значение (data), которое отобразится на соотв. знакоместе
     SPI_MasterTransmit(data, 1);
 }
 
