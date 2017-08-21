@@ -19,7 +19,7 @@
 
 DEVICE     = atmega8
 CLOCK      = 1000000
-PROGRAMMER = #-c stk500v2 -P avrdoper
+PROGRAMMER = -c usbasp
 OBJECTS    = main.o spi/spi.o max7219/max7219.o
 FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0xe1:m
 
