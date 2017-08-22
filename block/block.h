@@ -9,5 +9,6 @@ void Block_Move(blocks *block, unsigned char *field);
 
 unsigned char Block_Collision(blocks *block, unsigned char *field);
 
+void Block_Clear(blocks *block, unsigned char *field);
 
 #endif

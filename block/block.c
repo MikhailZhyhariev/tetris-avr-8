@@ -22,10 +22,7 @@ void Block_Move(blocks *block, unsigned char *field) {
     if ((block_end <= FIELD_HEIGHT) & (Block_Collision(block, field) == block->height)) {
 
         // очищаем предыдущее расположение блока
-        unsigned char count = 0; // индекс массива block.view
-        for (unsigned char i = block->Y; i < block_end; i++) {
-            field[i - 1] ^= block->view[count++] << block->X;
-        }
+        Block_Clear(block, field);
 
         block->Y++; // смещаем блок по оси Y
     } else {
@@ -55,11 +52,13 @@ unsigned char Block_Collision(blocks *block, unsigned char *field) {
 
     /* для каждого элемента массива block.view проверяем возможность коллизии
     с элементом поля, который находится ниже элемента block.view. Если на элементе
-    поля находится часть блока, то сначала из вычитаем эту часть блока из поля. Получаем нужный участок поля (который соответствует расположению блока по оси X)
+    поля находится часть блока, то сначала из вычитаем эту часть блока из поля.
+    Получаем нужный участок поля (который соответствует расположению блока по оси X)
     путем побитового умножения элемента массива block.view с нужным элементом поля
     после этого складываем по модулю 2 (XOR) полученный участок поля и
     элемент массива block.view. Если результат XOR больше или равен значению соотв.
-    элемента block.view, то инкрементируем переменную result (потому что при сдвиге блока не возникнет коллизии). */
+    элемента block.view, то инкрементируем переменную result (потому что при сдвиге
+    этой части блока не возникнет коллизии). */
     for (unsigned char i = block->Y; i < block_end; i++) {
 
         // значение текущей части блока
@@ -76,7 +75,8 @@ unsigned char Block_Collision(blocks *block, unsigned char *field) {
         /* значение части поля, которая находится ниже текущей части блока для
         ислючения влияния на результат следующих частей блока, вычитаем значение
         следующей части блока, если оно существует. Для точного вычисления значения
-        той части поля, которая находится под текущей частью блока побитово умножим (AND) значение части поля на значение текушего блока */
+        той части поля, которая находится под текущей частью блока побитово умножим
+        (AND) значение части поля на значение текушего блока */
         unsigned char field_value = (field[i] - next_block_value) & block_value;
 
         // складываем по модулю 2 (XOR) текущее значение блока и значение части поля
@@ -87,4 +87,13 @@ unsigned char Block_Collision(blocks *block, unsigned char *field) {
     }
 
     return result;
+}
+
+// Очищает то место, где находится блок
+void Block_Clear(blocks *block, unsigned char *field) {
+    unsigned char block_end = block->Y + block->height; // конец блока
+    unsigned char count = 0; // индекс массива block.view
+    for (unsigned char i = block->Y; i < block_end; i++) {
+        field[i - 1] ^= block->view[count++] << block->X;
+    }
 }
