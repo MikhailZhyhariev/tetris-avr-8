@@ -1,5 +1,4 @@
-#include <math.h>
-#include "../spi/spi.h"
+#include "spi/spi.h"
 #include "max7219.h"
 
 // Функция инициализации драйвера

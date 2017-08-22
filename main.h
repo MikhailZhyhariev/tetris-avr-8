@@ -10,8 +10,6 @@ typedef struct {
     unsigned char view[];
 } blocks;
 
-void Block_Draw(blocks *block, unsigned char *field);
-void Block_Move(blocks *block, unsigned char *field);
 
 
 #endif
