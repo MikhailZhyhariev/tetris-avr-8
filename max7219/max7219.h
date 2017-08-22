@@ -11,6 +11,8 @@ void MAX_Init();
 
 void MAX_WriteDigit(unsigned char address, unsigned char data);
 
+void MAX_WriteSomeDigits(unsigned char from, unsigned char to, unsigned char *data);
+
 void MAX_WriteAllDigits(unsigned char *data);
 
 void MAX_ClearDigit(unsigned char address);

@@ -24,12 +24,16 @@ int main(void) {
     unsigned char field[FIELD_HEIGHT];
     memset(field, 0x00, FIELD_HEIGHT); // задаем начальные значения для массива field
 
+    unsigned char block_number = 6;
+
+    field[FIELD_HEIGHT - 2] = 0x01;
+
     // рисуем первый блок
-    Block_Add(elements[3], field);
+    Block_Add(elements[block_number], field);
     MAX_WriteAllDigits(field);
 
     while (1) {
         _delay_ms(250);
-        Block_Move(elements[3], field);
+        Block_Move(elements[block_number], field);
     }
 }

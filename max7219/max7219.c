@@ -29,8 +29,14 @@ void MAX_WriteDigit(unsigned char address, unsigned char data) {
     SPI_MasterTransmit(data, 1);
 }
 
+void MAX_WriteSomeDigits(unsigned char from, unsigned char to, unsigned char *data) {
+    for (unsigned char address = from; address <= to; address++) {
+        MAX_WriteDigit(address, data[address - 1]);
+    }
+}
+
 void MAX_WriteAllDigits(unsigned char *data) {
-    for (int address = 1; address < 9; address++) {
+    for (unsigned char address = 1; address < 9; address++) {
         MAX_WriteDigit(address, data[address - 1]);
     }
 }
@@ -40,7 +46,7 @@ void MAX_ClearDigit(unsigned char address) {
 }
 
 void MAX_ClearAllDigits() {
-    for (int i = 1; i < 9; i++) {
+    for (unsigned char i = 1; i < 9; i++) {
       MAX_ClearDigit(i);
     }
 }
