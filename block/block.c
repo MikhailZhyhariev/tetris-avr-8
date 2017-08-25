@@ -4,7 +4,43 @@
 #include "../max7219/max7219.h"
 #include "block.h"
 
-// Добавляем блок на поле сложением (побитовым) с соответствующим значением в массиве field
+// массив, в котором содержится информация о блоках
+unsigned char block_init_info[7][4] = {
+    // widht, height, view
+    {4, 1, 0x0F, 0x00},   // I
+    {3, 2, 0x01, 0x07},   // J
+    {3, 2, 0x04, 0x07},   // L
+    {2, 2, 0x03, 0x03},   // O
+    {3, 2, 0x06, 0x03},   // S
+    {3, 2, 0x02, 0x07},   // T
+    {3, 2, 0x03, 0x06},   // Z
+};
+
+// Рандомно формирует блок из массива block_init_info
+blocks *Block_Init() {
+    // рандомно выбираем номер блока
+    unsigned char block_number = 0 + rand() % 7;
+
+    // динамически выделяем память под блок
+    blocks *block = (blocks*)malloc(sizeof(blocks));
+
+    // заполняем ширину, высоту и view блока из массива block_init_info
+    block->width = block_init_info[block_number][0];
+    block->height = block_init_info[block_number][1];
+    block->view = (unsigned char*)malloc(sizeof(unsigned char) * block->height);
+    for (unsigned char i = 0; i < block->height; i++) {
+        block->view[i] = block_init_info[block_number][i + 2];
+    }
+
+    // рандомно выбираем X координату
+    block->X = 0 + rand() % (FIELD_WIDTH - block->width);
+    // Y = 1, из-за того, что адрес первого знака (Digit 0) = 0x01
+    block->Y = 1;
+
+    return block;
+}
+
+// Добавляет блок на поле сложением (побитовым) с соответствующим значением в массиве field
 void Block_Add(blocks *block, unsigned char *field) {
     unsigned char count = 0;
     for (unsigned char i = block->Y; i < block->Y + block->height; i++) {
@@ -13,7 +49,7 @@ void Block_Add(blocks *block, unsigned char *field) {
 }
 
 // Двигает блок по полю
-void Block_Move(blocks *block, unsigned char *field) {
+blocks *Block_Move(blocks *block, unsigned char *field) {
     unsigned char block_end = block->Y + block->height; // конец блока
 
     // если блок не дошел до конца поля и значение, которое вернула функция
@@ -23,23 +59,19 @@ void Block_Move(blocks *block, unsigned char *field) {
 
         // очищаем предыдущее расположение блока
         Block_Clear(block, field);
-
         block->Y++; // смещаем блок по оси Y
     } else {
 
-        block->Y = 1; // перемещаем блок в начало поля
+        if (field[0] > 0x01) memset(field, 0x00, FIELD_HEIGHT);
 
-        // смещаем блок по оси X
-        // если блок не помещается, то устанавливаем начальное значение X = 0
-        if (block->X <= FIELD_WIDTH - 2 * block->width) block->X += block->width;
-        else block->X = 0;
-
-        // if (field[0] > 0x11) memset(field, 0x00, FIELD_HEIGHT);
+        block = Block_Init(); // выбираем следующий блок
     }
 
     // отрисовываем смещенный блок и перерисовываем поле
     Block_Add(block, field);
     MAX_WriteAllDigits(field);
+
+    return block;
 }
 
 // Проверяет коллизию блока и поля. Возвращает результат поэлементного
