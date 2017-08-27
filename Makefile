@@ -20,7 +20,7 @@
 DEVICE     = atmega8
 CLOCK      = 1000000
 PROGRAMMER = -c usbasp
-OBJECTS    = main.o max7219/spi/spi.o max7219/max7219.o block/block.o
+OBJECTS    = main.o max7219/spi/spi.o max7219/max7219.o block/block.o field/field.o
 FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0xe1:m
 
 # ATMega8 fuse bits used above (fuse bits for other devices are different!):
@@ -99,4 +99,4 @@ disasm:	main.elf
 	avr-objdump -d main.elf
 
 cpp:
-	$(COMPILE) -E main.c max7219/spi/spi.c max7219/max7219.c block/block.c
+	$(COMPILE) -E main.c max7219/spi/spi.c max7219/max7219.c block/block.c field/field.c

@@ -13,14 +13,21 @@ typedef struct {
     unsigned char *view;
 } blocks;
 
+// Рандомно формирует блок из массива block_init_info
 blocks *Block_Init();
 
+// Добавляет блок на поле сложением (побитовым) с соответствующим значением в массиве field
 void Block_Add(blocks *block, unsigned char *field);
 
+// Двигает блок по полю
 blocks *Block_Move(blocks *block, unsigned char *field);
 
+// Проверяет коллизию блока и поля. Возвращает результат поэлементного
+// сложения по модулю 2 (XOR) массива block.view и элемента поля, который находится
+// ниже соотв. элемента массива block.view
 unsigned char Block_Collision(blocks *block, unsigned char *field);
 
+// Очищает то место, где находится блок
 void Block_Clear(blocks *block, unsigned char *field);
 
 

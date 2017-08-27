@@ -24,7 +24,7 @@ blocks *Block_Init() {
     // динамически выделяем память под блок
     blocks *block = (blocks*)malloc(sizeof(blocks));
 
-    // заполняем ширину, высоту и view блока из массива block_init_info
+    // задаем ширину, высоту и view блока из массива block_init_info
     block->width = block_init_info[block_number][0];
     block->height = block_init_info[block_number][1];
     block->view = (unsigned char*)malloc(sizeof(unsigned char) * block->height);
@@ -54,7 +54,7 @@ blocks *Block_Move(blocks *block, unsigned char *field) {
 
     // если блок не дошел до конца поля и значение, которое вернула функция
     // проверки коллизии равно высоте блока, то он смещается по оси Y
-    // иначе
+    // иначе инициализируем следующий блок
     if ((block_end <= FIELD_HEIGHT) & (Block_Collision(block, field) == block->height)) {
 
         // очищаем предыдущее расположение блока
@@ -64,6 +64,7 @@ blocks *Block_Move(blocks *block, unsigned char *field) {
 
         if (field[0] > 0x01) memset(field, 0x00, FIELD_HEIGHT);
 
+        free(block);
         block = Block_Init(); // выбираем следующий блок
     }
 
@@ -126,6 +127,8 @@ void Block_Clear(blocks *block, unsigned char *field) {
     unsigned char block_end = block->Y + block->height; // конец блока
     unsigned char count = 0; // индекс массива block.view
     for (unsigned char i = block->Y; i < block_end; i++) {
+        // стирание происходит путем сложения по модулю 2 (XOR) части поля и части блока,
+        // которая расположена на этой части поля
         field[i - 1] ^= block->view[count++] << block->X;
     }
 }
