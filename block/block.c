@@ -27,7 +27,7 @@ blocks *Block_Init() {
     // задаем ширину, высоту и view блока из массива block_init_info
     block->width = block_init_info[block_number][0];
     block->height = block_init_info[block_number][1];
-    block->view = (unsigned char*)malloc(sizeof(unsigned char) * block->height);
+    block->view = (unsigned char *)malloc(sizeof(unsigned char) * block->height);
     for (unsigned char i = 0; i < block->height; i++) {
         block->view[i] = block_init_info[block_number][i + 2];
     }
@@ -62,8 +62,10 @@ blocks *Block_Move(blocks *block, unsigned char *field) {
         block->Y++; // смещаем блок по оси Y
     } else {
 
-        if (field[0] > 0x01) memset(field, 0x00, FIELD_HEIGHT);
+        if (field[0] > 0x00) memset(field, 0x00, FIELD_HEIGHT);
 
+        // освобождаем память от массива view и блока
+        free(block->view);
         free(block);
         block = Block_Init(); // выбираем следующий блок
     }
@@ -101,7 +103,7 @@ unsigned char Block_Collision(blocks *block, unsigned char *field) {
         unsigned char next_block_value = 0;
         // проверяем дошли ли мы до конца массива
         if (count < block->height) {
-            // если не дошли, то инициируем значение следующей части блока
+            // если не дошли, то инициализируем значение следующей части блока
             next_block_value = block->view[count] << block->X;
         }
 

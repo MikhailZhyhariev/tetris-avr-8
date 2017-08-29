@@ -1,9 +1,9 @@
 #include <stdlib.h>
-#include "field.h"
+#include "array.h"
 #include "../main.h"
 
 // Создает двумерный битовый массив размера (rows х cols)
-void **FIELD_CreateArray(unsigned char rows, unsigned char cols) {
+void **Array_Create(unsigned char rows, unsigned char cols) {
     // выделяем память под строки матрицы
     void **array = (void **)malloc(sizeof(void *) * rows);
     for (unsigned char i = 0; i < rows; i++) {
@@ -16,9 +16,9 @@ void **FIELD_CreateArray(unsigned char rows, unsigned char cols) {
 }
 
 // На основе массива array, создает двумерный массив, разбивая на отдельные биты каждый член массива array.
-unsigned char **FIELD_BitMap(unsigned char *array, unsigned char rows, unsigned char cols) {
+unsigned char **Array_BitMap(unsigned char *array, unsigned char rows, unsigned char cols) {
     // создаем двумерный массив размером (rows х cols)
-    unsigned char **bit_map = (unsigned char **)FIELD_CreateArray(rows, cols);
+    unsigned char **bit_map = (unsigned char **)Array_Create(rows, cols);
 
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
@@ -34,12 +34,13 @@ unsigned char **FIELD_BitMap(unsigned char *array, unsigned char rows, unsigned 
 }
 
 // Транспонирует матрицу по главной диагонали
-unsigned char **FIELD_TransposeMainDiagonal(unsigned char **array, unsigned char rows, unsigned char cols) {
+unsigned char **Array_TransposeMainDiagonal(unsigned char **array, unsigned char rows, unsigned char cols) {
     // создаем двумерный массив размером (rows х cols)
-    unsigned char **transpose_matrix = (unsigned char **)FIELD_CreateArray(rows, cols);
+    unsigned char **transpose_matrix = (unsigned char **)Array_Create(rows, cols);
 
     for (unsigned char i = 0; i < rows; i++) {
         for (unsigned char j = 0; j < cols; j++) {
+            // заполняем транспонированную матрицу
             transpose_matrix[i][j] = array[j][i];
         }
     }
@@ -48,13 +49,14 @@ unsigned char **FIELD_TransposeMainDiagonal(unsigned char **array, unsigned char
 }
 
 // Транспонирует матрицу по побочной диагонали
-unsigned char **FIELD_TransposeCollateralDiagonal(unsigned char **array, unsigned char rows, unsigned char cols) {
+unsigned char **Array_TransposeCollateralDiagonal(unsigned char **array, unsigned char rows, unsigned char cols) {
     // создаем двумерный массив размером (rows х cols)
-    unsigned char **transpose_matrix = (unsigned char **)FIELD_CreateArray(rows, cols);
+    unsigned char **transpose_matrix = (unsigned char **)Array_Create(rows, cols);
 
     for (unsigned char i = 0; i < rows; i++) {
         for (unsigned char j = 0; j < cols; j++) {
-            transpose_matrix[i][j] = array[rows - 1 - j][cols - 1 - i];
+            // заполняем транспонированную матрицу
+            transpose_matrix[i][j] = array[cols - 1 - j][rows - 1 - i];
         }
     }
 
@@ -62,9 +64,9 @@ unsigned char **FIELD_TransposeCollateralDiagonal(unsigned char **array, unsigne
 }
 
 // Из двумерной битовой матрицы array построчно собирает массив чисел
-unsigned char *FIELD_GetHexArray(unsigned char **array, unsigned char rows, unsigned char cols) {
+unsigned char *Array_GetHex(unsigned char **array, unsigned char rows, unsigned char cols) {
     // создаем массив размером (rows)
-    unsigned char *transpose_field = (unsigned char *)FIELD_CreateArray(rows, 1);
+    unsigned char *transpose_field = (unsigned char *)Array_Create(rows, 1);
     free(transpose_field); // очищаем память
 
     for (unsigned char i = 0; i < rows; i++) {

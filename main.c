@@ -23,7 +23,7 @@ int main(void) {
     Block_Add(block, field);
     MAX_WriteAllDigits(field);
     while (1) {
-        _delay_ms(250);
+        _delay_ms(50);
         block = Block_Move(block, field);
     }
 }
