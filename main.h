@@ -6,4 +6,6 @@
 
 void Random(void);
 
+void Swap(unsigned char *a, unsigned char *b);
+
 #endif

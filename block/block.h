@@ -19,6 +19,9 @@ blocks *Block_Init();
 // Добавляет блок на поле сложением (побитовым) с соответствующим значением в массиве field
 void Block_Add(blocks *block, unsigned char *field);
 
+// Очищает то место, где находится блок
+void Block_Clear(blocks *block, unsigned char *field);
+
 // Двигает блок по полю
 blocks *Block_Move(blocks *block, unsigned char *field);
 
@@ -27,8 +30,11 @@ blocks *Block_Move(blocks *block, unsigned char *field);
 // ниже соотв. элемента массива block.view
 unsigned char Block_Collision(blocks *block, unsigned char *field);
 
-// Очищает то место, где находится блок
-void Block_Clear(blocks *block, unsigned char *field);
+// Сдвигает блок влево или вправо по нажатию кнопки
+void Block_MoveLeftRight(blocks *block, unsigned char *field);
+
+
+blocks *Block_Transform(blocks* block, unsigned char *field);
 
 
 #endif

@@ -1,7 +1,10 @@
+#include <avr/io.h>
+#include <util/delay.h>
 #include <string.h>
 #include <stdlib.h>
 #include "../main.h"
 #include "../max7219/max7219.h"
+#include "../array/array.h"
 #include "block.h"
 
 // массив, в котором содержится информация о блоках
@@ -28,6 +31,7 @@ blocks *Block_Init() {
     block->width = block_init_info[block_number][0];
     block->height = block_init_info[block_number][1];
     block->view = (unsigned char *)malloc(sizeof(unsigned char) * block->height);
+    block->view = (unsigned char *)Array_Create(1, block->height);
     for (unsigned char i = 0; i < block->height; i++) {
         block->view[i] = block_init_info[block_number][i + 2];
     }
@@ -45,6 +49,17 @@ void Block_Add(blocks *block, unsigned char *field) {
     unsigned char count = 0;
     for (unsigned char i = block->Y; i < block->Y + block->height; i++) {
         field[i - 1] |= block->view[count++] << block->X;
+    }
+}
+
+// Очищает то место, где находится блок
+void Block_Clear(blocks *block, unsigned char *field) {
+    unsigned char block_end = block->Y + block->height; // конец блока
+    unsigned char count = 0; // индекс массива block.view
+    for (unsigned char i = block->Y; i < block_end; i++) {
+        // стирание происходит путем сложения по модулю 2 (XOR) части поля и части блока,
+        // которая расположена на этой части поля
+        field[i - 1] ^= block->view[count++] << block->X;
     }
 }
 
@@ -124,13 +139,64 @@ unsigned char Block_Collision(blocks *block, unsigned char *field) {
     return result;
 }
 
-// Очищает то место, где находится блок
-void Block_Clear(blocks *block, unsigned char *field) {
-    unsigned char block_end = block->Y + block->height; // конец блока
-    unsigned char count = 0; // индекс массива block.view
-    for (unsigned char i = block->Y; i < block_end; i++) {
-        // стирание происходит путем сложения по модулю 2 (XOR) части поля и части блока,
-        // которая расположена на этой части поля
-        field[i - 1] ^= block->view[count++] << block->X;
+// Сдвигает блок влево или вправо по нажатию кнопки
+void Block_MoveLeftRight(blocks *block, unsigned char *field) {
+    unsigned char block_end = block->X + block->width;
+
+    // если кнопка PD0 нажата и сдвиг блока по оси X больше 0, то сдвигаем блок влево
+    if (((PIND&(1 << PD0)) == 0) & (block->X > 0))  {
+        // стираем блок перед сдвигом
+        Block_Clear(block, field);
+        // задержка для того, чтобы одно нажатие кнопки соответствовало сдвигу блока на 1
+        _delay_ms(250);
+        // сдвигаем блок
+        block->X--;
     }
+    // если кнопка PD1 нажата и конец блока не выходит за поле, то сдвигаем блок вправо
+    else if (((PIND&(1 << PD1)) == 0) & (block_end < FIELD_HEIGHT)) {
+        // стираем блок перед сдвигом
+        Block_Clear(block, field);
+        // задержка для того, чтобы одно нажатие кнопки соответствовало сдвигу блока на 1
+        _delay_ms(250);
+        // сдвигаем блок
+        block->X++;
+    }
+
+    // добавляем сдвинутый блок на поле и перерисовываем поле
+    Block_Add(block, field);
+    MAX_WriteAllDigits(field);
+}
+
+// Поворачивает блок по часовой стрелке
+blocks *Block_Transform(blocks* block, unsigned char *field) {
+    // стираем старый блок
+    Block_Clear(block, field);
+
+    // создаем двумерный массив, который содержит битовое представление массива block.view
+    unsigned char *bit_view = (unsigned char *)malloc(block->width * block->height * sizeof(unsigned char));
+    bit_view = Array_BitMap(block->view, block->height, block->width);
+
+    // создаем двумерный массив для повернутого блока
+    unsigned char **rotated_view = Array_Create(block->width, block->height);
+    rotated_view = Array_RotateRight(bit_view, block->height, block->width);
+
+    // меняем местами ширину и высоту блока
+    Swap(&block->width, &block->height);
+
+    // освобождаем память из-под массива block.view
+    free(block->view);
+    // выделяем память под повернутый блок
+    block->view = (unsigned char *)malloc(sizeof(unsigned char) * block->height);
+    block->view = Array_GetHex(rotated_view, block->height, block->width);
+
+    // // освобождаем память из-под массива view_bit
+    free(bit_view);
+    // // освобождаем память из-под массива rotated_view
+    Array_Free(rotated_view);
+
+    // добавляем повернутый блок и перерисосываем поле
+    Block_Add(block, field);
+    MAX_WriteAllDigits(field);
+
+    return block;
 }
