@@ -31,7 +31,6 @@ blocks *Block_Init() {
     block->width = block_init_info[block_number][0];
     block->height = block_init_info[block_number][1];
     block->view = (unsigned char *)malloc(sizeof(unsigned char) * block->height);
-    block->view = (unsigned char *)Array_Create(1, block->height);
     for (unsigned char i = 0; i < block->height; i++) {
         block->view[i] = block_init_info[block_number][i + 2];
     }
@@ -177,22 +176,20 @@ blocks *Block_Transform(blocks* block, unsigned char *field) {
     bit_view = Array_BitMap(block->view, block->height, block->width);
 
     // создаем двумерный массив для повернутого блока
-    unsigned char **rotated_view = Array_Create(block->width, block->height);
+    unsigned char *rotated_view = (unsigned char *)malloc(block->width * block->height * sizeof(unsigned char));
     rotated_view = Array_RotateRight(bit_view, block->height, block->width);
 
     // меняем местами ширину и высоту блока
     Swap(&block->width, &block->height);
 
-    // освобождаем память из-под массива block.view
-    free(block->view);
-    // выделяем память под повернутый блок
-    block->view = (unsigned char *)malloc(sizeof(unsigned char) * block->height);
+    // освобождаем память из-под массива block.view и выделяем память под повернутый блок
+    block->view = (unsigned char *)realloc(block->view, sizeof(unsigned char) * block->height);
     block->view = Array_GetHex(rotated_view, block->height, block->width);
 
-    // // освобождаем память из-под массива view_bit
+    // освобождаем память из-под массива view_bit
     free(bit_view);
-    // // освобождаем память из-под массива rotated_view
-    Array_Free(rotated_view);
+    // освобождаем память из-под массива rotated_view
+    free(rotated_view);
 
     // добавляем повернутый блок и перерисосываем поле
     Block_Add(block, field);
