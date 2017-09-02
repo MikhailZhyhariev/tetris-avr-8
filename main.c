@@ -46,23 +46,31 @@ int main(void) {
     while (1);
 }
 
+// прерывание таймера 1 по захвату-сравнению
 ISR(TIMER1_COMPA_vect) {
     cli(); // запрещаем прерывания
-    block = Block_MoveDown(block, field); // двигаем блок
+    // block = Block_MoveDown(block, field); // двигаем блок
     sei(); // разрешаем прерывания
 }
 
+// прерывание по низкому уровню на пине INT0 (PD0) контроллера
 ISR(INT0_vect) {
+    cli();
     Block_MoveLeft(block, field);
+    sei();
 }
 
+// прерывание по низкому уровню на пине INT1 (PD1) контроллера
 ISR(INT1_vect) {
+    cli();
     Block_MoveRight(block, field);
+    sei();
 }
 
+// прерывание по низкому уровню на пине INT2 (PD2) контроллера
 ISR(INT2_vect) {
     cli();
-    Block_Transform(block, field);
+    Block_Rotate(block, field);
     sei();
 }
 

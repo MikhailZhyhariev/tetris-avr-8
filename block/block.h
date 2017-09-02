@@ -22,6 +22,14 @@ void Block_Add(blocks *block, unsigned char *field);
 // Очищает то место, где находится блок
 void Block_Clear(blocks *block, unsigned char *field);
 
+/* Копирует блок с возможностью преобразования (которая задается аргументом act) и возвращает копию.
+Значения аргумента act:
+"n" - возвращает блок без преобразований
+"m" - находит транспонированную по главной диагонали матрицу;
+"c" - находит транспонированную по побочной диагонали матрицу;
+"r" - поворачивает блок вправо на 90 градусов. */
+blocks *Block_Copy(blocks *block, char act);
+
 // Двигает блок по полю
 blocks *Block_MoveDown(blocks *block, unsigned char *field);
 
@@ -35,8 +43,10 @@ void Block_MoveRight(blocks *block, unsigned char *field);
 // ниже соотв. элемента массива block.view
 unsigned char Block_Collision(blocks *block, unsigned char *field);
 
+unsigned char Block_SideCollision(blocks *block, unsigned char *field, unsigned char side);
+
 // Поворачивает блок по часовой стрелке
-void Block_Transform(blocks* block, unsigned char *field);
+void Block_Rotate(blocks* block, unsigned char *field);
 
 
 #endif

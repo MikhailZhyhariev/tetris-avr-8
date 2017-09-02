@@ -10,7 +10,7 @@
 
 // массив, в котором содержится информация о блоках
 unsigned char block_init_info[7][4] = {
-    // widht, height, view
+    // width, height, view
     {4, 1, 0x0F, 0x00},   // I
     {3, 2, 0x01, 0x07},   // J
     {3, 2, 0x04, 0x07},   // L
@@ -23,7 +23,7 @@ unsigned char block_init_info[7][4] = {
 // Рандомно формирует блок из массива block_init_info
 blocks *Block_Init() {
     // рандомно выбираем номер блока
-    unsigned char block_number = 0 + rand() % 7;
+    unsigned char block_number = 2;//0 + rand() % 7;
 
     // динамически выделяем память под блок
     blocks *block = (blocks*)malloc(sizeof(blocks));
@@ -63,6 +63,40 @@ void Block_Clear(blocks *block, unsigned char *field) {
     }
 }
 
+/* Копирует блок с возможностью преобразования (которая задается аргументом act) и возвращает копию
+значения аргумента act:
+"n" - возвращает блок без преобразований
+"m" - находит транспонированную по главной диагонали матрицу;
+"c" - находит транспонированную по побочной диагонали матрицу;
+"r" - поворачивает блок вправо на 90 градусов. */
+blocks *Block_Copy(blocks *block, char act) {
+    // выделяем память под копию блока
+    blocks *c_block = (blocks *)malloc(sizeof(blocks));
+    // задаем ширину и высоту нового блока
+    c_block->width = block->width;
+    c_block->height = block->height;
+    // выделяем память под массив block.view
+    c_block->view = (unsigned char *)malloc(block->height * sizeof(unsigned char));
+    // задаем положение на поле
+    c_block->X = block->X;
+    c_block->Y = block->Y;
+
+    // транспонируем по побочной диагонали
+    if (act == 'c') c_block->view = Array_Transform(block->view, &c_block->height, &c_block->width, 'c');
+    // транспонируем по главной диагонали
+    else if (act == 'm' ) c_block->view = Array_Transform(block->view, &c_block->height, &c_block->width, 'm');
+    // поворачиваем блок на 90 градусов вправо
+    else if (act == 'r') c_block->view = Array_Transform(block->view, &c_block->height, &c_block->width, 'r');
+    // копируем массив block.view в новый блок
+    else {
+        for (unsigned char i = 0; i < block->height; i++) {
+            c_block->view[i] = block->view[i];
+        }
+    }
+
+    return c_block;
+}
+
 // Двигает блок по полю
 blocks *Block_MoveDown(blocks *block, unsigned char *field) {
     unsigned char block_end = block->Y + block->height; // конец блока
@@ -94,16 +128,18 @@ blocks *Block_MoveDown(blocks *block, unsigned char *field) {
 
 // Сдвигает блок влево
 void Block_MoveLeft(blocks *block, unsigned char *field) {
-    // если блок не выходит за левую границу поля, то сдвигаем на 1 влево
-    if (block->X > 0) {
+    // определяем произойдет ли коллизия при сдвиге
+    unsigned char collision = Block_SideCollision(block, field, 'l');
+
+    // если блок не выходит за левую границу поля и если не произойдет коллизия при сдвиге,
+    // то сдвигаем на 1 влево
+    if ((block->X > 0) & collision) {
         // запрещаем прерывания
         cli();
         // стираем блок перед сдвигом
         Block_Clear(block, field);
         // сдвигаем блок
         block->X--;
-        // задержка для того, чтобы одно нажатие кнопки соответствовало сдвигу блока на 1
-        _delay_ms(250);
         // добавляем сдвинутый блок на поле и перерисовываем поле
         Block_Add(block, field);
         MAX_WriteAllDigits(field);
@@ -114,16 +150,18 @@ void Block_MoveLeft(blocks *block, unsigned char *field) {
 
 // Сдвигаем блок на 1 вправо
 void Block_MoveRight(blocks *block, unsigned char *field) {
-    // если блок не выходит за правую границу поля, то сдвигаем на 1 вправо
-    if (block->X + block->width < FIELD_WIDTH) {
+    // определяем произойдет ли коллизия при сдвиге
+    unsigned char collision = Block_SideCollision(block, field, 'r');
+
+    // если блок не выходит за правую границу поля и если коллизия при сдвиге не произойдет,
+    // то сдвигаем на 1 вправо
+    if ((block->X + block->width < FIELD_WIDTH) & collision) {
         // запрещаем прерывания
         cli();
         // стираем блок перед сдвигом
         Block_Clear(block, field);
         // сдвигаем блок
         block->X++;
-        // задержка для того, чтобы одно нажатие кнопки соответствовало сдвигу блока на 1
-        _delay_ms(250);
         // добавляем сдвинутый блок на поле и перерисовываем поле
         Block_Add(block, field);
         MAX_WriteAllDigits(field);
@@ -179,30 +217,60 @@ unsigned char Block_Collision(blocks *block, unsigned char *field) {
     return result;
 }
 
+unsigned char Block_SideCollision(blocks *block, unsigned char *field, unsigned char side) {
+    // определяем размеры поля
+    unsigned char field_height = FIELD_HEIGHT;
+    unsigned char field_width = FIELD_WIDTH;
+
+    // исходя из направления сдвига определяем трансформацию матрицу
+    char transform;
+    if (side == 'r') transform = 'm';
+    else transform = 'c';
+
+    // удаляем блок с поля, чтобы транспонировать поле без блока
+    Block_Clear(block, field);
+
+    // выделяем память под поле, для определения коллизии слева
+    unsigned char *collision_field = (unsigned char *)malloc(field_width * sizeof(unsigned char));
+    // транспонируем поле по побочной диагонали
+    collision_field = Array_Transform(field, &field_height, &field_width, transform);
+
+    // добавляем блок назад
+    Block_Add(block, field);
+
+    // копируем блок и транспонируем его по побочной диагонали
+    blocks *collision_block = (blocks *)malloc(sizeof(blocks));
+    collision_block = Block_Copy(block, transform);
+
+    // переопределяем смещение в соотв со сдвинутым полем и направлением сдвига блока
+    if (transform == 'c') {
+        collision_block->Y = field_width - (block->X + block->width) + 1;
+        collision_block->X = field_height - (block->Y + block->height) + 1;
+    } else {
+        collision_block->Y = block->X + 1;
+        collision_block->X = block->Y - 1;
+    }
+
+    // добавляем скопированный блок на поле collision_field
+    Block_Add(collision_block, collision_field);
+
+    unsigned char result = 0;
+    if (Block_Collision(collision_block, collision_field) == collision_block->height) result = 1;
+
+    // освобождаем память из-под массивов
+    free(collision_block);
+    free(collision_field);
+
+    return result;
+}
+
 // Поворачивает блок по часовой стрелке
-void Block_Transform(blocks* block, unsigned char *field) {
+void Block_Rotate(blocks* block, unsigned char *field) {
     // стираем старый блок
     Block_Clear(block, field);
 
-    // создаем двумерный массив, который содержит битовое представление массива block.view
-    unsigned char *bit_view = (unsigned char *)malloc(block->width * block->height * sizeof(unsigned char));
-    bit_view = Array_BitMap(block->view, block->height, block->width);
-
-    // создаем двумерный массив для повернутого блока
-    unsigned char *rotated_view = (unsigned char *)malloc(block->width * block->height * sizeof(unsigned char));
-    rotated_view = Array_RotateRight(bit_view, block->height, block->width);
-
-    // меняем местами ширину и высоту блока
-    Swap(&block->width, &block->height);
-
-    // освобождаем память из-под массива block.view и выделяем память под повернутый блок
-    block->view = (unsigned char *)realloc(block->view, sizeof(unsigned char) * block->height);
-    block->view = Array_GetHex(rotated_view, block->height, block->width);
-
-    // освобождаем память из-под массива view_bit
-    free(bit_view);
-    // освобождаем память из-под массива rotated_view
-    free(rotated_view);
+    // переопределяем массив block.view
+    block->view = Array_Transform(block->view, &block->height, &block->width, 'r');
 
     // добавляем повернутый блок и перерисосываем поле
     Block_Add(block, field);
