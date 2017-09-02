@@ -23,18 +23,20 @@ void Block_Add(blocks *block, unsigned char *field);
 void Block_Clear(blocks *block, unsigned char *field);
 
 // Двигает блок по полю
-blocks *Block_Move(blocks *block, unsigned char *field);
+blocks *Block_MoveDown(blocks *block, unsigned char *field);
+
+// Сдвигает блок влево
+void Block_MoveLeft(blocks *block, unsigned char *field);
+// Сдвигаем блок на 1 вправо
+void Block_MoveRight(blocks *block, unsigned char *field);
 
 // Проверяет коллизию блока и поля. Возвращает результат поэлементного
 // сложения по модулю 2 (XOR) массива block.view и элемента поля, который находится
 // ниже соотв. элемента массива block.view
 unsigned char Block_Collision(blocks *block, unsigned char *field);
 
-// Сдвигает блок влево или вправо по нажатию кнопки
-void Block_MoveLeftRight(blocks *block, unsigned char *field);
-
-
-blocks *Block_Transform(blocks* block, unsigned char *field);
+// Поворачивает блок по часовой стрелке
+void Block_Transform(blocks* block, unsigned char *field);
 
 
 #endif

@@ -17,11 +17,11 @@
 #                   default_serial = "avrdoper"
 # FUSES ........ Parameters for avrdude to flash the fuses appropriately.
 
-DEVICE     = atmega8
+DEVICE     = atmega128
 CLOCK      = 1000000
 PROGRAMMER = -c usbasp
 OBJECTS    = main.o max7219/spi/spi.o max7219/max7219.o block/block.o array/array.o
-FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0xe1:m
+FUSES      = -U lfuse:w:0xc1:m -U hfuse:w:0x99:m -U efuse:w:0xfd:m #-U hfuse:w:0xd9:m -U lfuse:w:0xe1:m
 
 # ATMega8 fuse bits used above (fuse bits for other devices are different!):
 # Example for 8 MHz internal oscillator
@@ -49,7 +49,7 @@ FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0xe1:m
 # Tune the lines below only if you know what you are doing:
 
 AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
-COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE) -std=c99 
+COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE) -std=c99
 
 # symbolic targets:
 all:	main.hex

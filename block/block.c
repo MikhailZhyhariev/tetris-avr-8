@@ -2,6 +2,7 @@
 #include <util/delay.h>
 #include <string.h>
 #include <stdlib.h>
+#include <avr/interrupt.h>
 #include "../main.h"
 #include "../max7219/max7219.h"
 #include "../array/array.h"
@@ -63,7 +64,7 @@ void Block_Clear(blocks *block, unsigned char *field) {
 }
 
 // Двигает блок по полю
-blocks *Block_Move(blocks *block, unsigned char *field) {
+blocks *Block_MoveDown(blocks *block, unsigned char *field) {
     unsigned char block_end = block->Y + block->height; // конец блока
 
     // если блок не дошел до конца поля и значение, которое вернула функция
@@ -89,6 +90,46 @@ blocks *Block_Move(blocks *block, unsigned char *field) {
     MAX_WriteAllDigits(field);
 
     return block;
+}
+
+// Сдвигает блок влево
+void Block_MoveLeft(blocks *block, unsigned char *field) {
+    // если блок не выходит за левую границу поля, то сдвигаем на 1 влево
+    if (block->X > 0) {
+        // запрещаем прерывания
+        cli();
+        // стираем блок перед сдвигом
+        Block_Clear(block, field);
+        // сдвигаем блок
+        block->X--;
+        // задержка для того, чтобы одно нажатие кнопки соответствовало сдвигу блока на 1
+        _delay_ms(250);
+        // добавляем сдвинутый блок на поле и перерисовываем поле
+        Block_Add(block, field);
+        MAX_WriteAllDigits(field);
+        // разрешаем прерывания
+        sei();
+    }
+}
+
+// Сдвигаем блок на 1 вправо
+void Block_MoveRight(blocks *block, unsigned char *field) {
+    // если блок не выходит за правую границу поля, то сдвигаем на 1 вправо
+    if (block->X + block->width < FIELD_WIDTH) {
+        // запрещаем прерывания
+        cli();
+        // стираем блок перед сдвигом
+        Block_Clear(block, field);
+        // сдвигаем блок
+        block->X++;
+        // задержка для того, чтобы одно нажатие кнопки соответствовало сдвигу блока на 1
+        _delay_ms(250);
+        // добавляем сдвинутый блок на поле и перерисовываем поле
+        Block_Add(block, field);
+        MAX_WriteAllDigits(field);
+        // разрешаем прерывания
+        sei();
+    }
 }
 
 // Проверяет коллизию блока и поля. Возвращает результат поэлементного
@@ -138,36 +179,8 @@ unsigned char Block_Collision(blocks *block, unsigned char *field) {
     return result;
 }
 
-// Сдвигает блок влево или вправо по нажатию кнопки
-void Block_MoveLeftRight(blocks *block, unsigned char *field) {
-    unsigned char block_end = block->X + block->width;
-
-    // если кнопка PD0 нажата и сдвиг блока по оси X больше 0, то сдвигаем блок влево
-    if (((PIND&(1 << PD0)) == 0) & (block->X > 0))  {
-        // стираем блок перед сдвигом
-        Block_Clear(block, field);
-        // задержка для того, чтобы одно нажатие кнопки соответствовало сдвигу блока на 1
-        _delay_ms(250);
-        // сдвигаем блок
-        block->X--;
-    }
-    // если кнопка PD1 нажата и конец блока не выходит за поле, то сдвигаем блок вправо
-    else if (((PIND&(1 << PD1)) == 0) & (block_end < FIELD_HEIGHT)) {
-        // стираем блок перед сдвигом
-        Block_Clear(block, field);
-        // задержка для того, чтобы одно нажатие кнопки соответствовало сдвигу блока на 1
-        _delay_ms(250);
-        // сдвигаем блок
-        block->X++;
-    }
-
-    // добавляем сдвинутый блок на поле и перерисовываем поле
-    Block_Add(block, field);
-    MAX_WriteAllDigits(field);
-}
-
 // Поворачивает блок по часовой стрелке
-blocks *Block_Transform(blocks* block, unsigned char *field) {
+void Block_Transform(blocks* block, unsigned char *field) {
     // стираем старый блок
     Block_Clear(block, field);
 
@@ -194,6 +207,4 @@ blocks *Block_Transform(blocks* block, unsigned char *field) {
     // добавляем повернутый блок и перерисосываем поле
     Block_Add(block, field);
     MAX_WriteAllDigits(field);
-
-    return block;
 }
